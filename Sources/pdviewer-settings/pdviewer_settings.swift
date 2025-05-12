@@ -183,36 +183,20 @@ public final class Settings: @unchecked Sendable {
     json?["tutorials"].arrayValue.map({ Tutorial(json: $0) }) ?? []
   }()
   
-  public private(set) lazy var maxHistoryRecords: Int = {
-    json?["max_history_records"].int ?? 64
+  public private(set) lazy var forceSplitMultiTexture: Bool = {
+    json?["force_split_multi_texture"].bool ?? false
   }()
   
-  public private(set) lazy var maxDrawingArea: Float = {
-    json?["max_drawing_area"].float ?? 4665600
+  public private(set) lazy var forcePreviewMultiTexture: Bool = {
+    json?["force_preview_multi_texture"].bool ?? false
   }()
   
-  public private(set) lazy var maxDrawingHeight: Float = {
-    json?["max_drawing_height"].float ?? 4665600
+  public private(set) lazy var forceDrawMultiTexture: Bool = {
+    json?["force_draw_multi_textrue"].bool ?? false
   }()
   
-  public private(set) lazy var pdviewerMaxDrawingArea: Float = {
-    json?["max_drawing_area_pdviewer"].float ?? 3841600
-  }()
-  
-  public private(set) lazy var pdviewerMaxDrawingHeight: Float = {
-    json?["max_drawing_height_pdviewer"].float ?? 1960
-  }()
-  
-  public private(set) lazy var closestPresetColorOptimized: Bool = {
-    json?["closest_preset_color_optimized"].boolValue ?? true
-  }()
-  
-  public private(set) lazy var pixelAlign4Tutorial: Tutorial? = {
-    tutorials.first(where: { $0.identifier == "pixel_align_4" })
-  }()
-  
-  public private(set) lazy var rowsColumesAlignTutorial: Tutorial? = {
-    tutorials.first(where: { $0.identifier == "rows_columes_align" })
+  public private(set) lazy var downSampleIfNeeded: Bool = {
+    json?["downsample_if_needed"].bool ?? true
   }()
   
   public private(set) lazy var contactDeveloperTutorial: Tutorial? = {

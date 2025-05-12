@@ -1,12 +1,10 @@
 {
     "version": "1.0.0",
     "min_supported_app_version": "3.9.0",
-    "max_history_records": 64,
-    "max_drawing_area": 4665600,
-    "max_drawing_height": 2250,
-    "max_drawing_area_pdviewer": 3841600,
-    "max_drawing_height_pdviewer": 1960,
-    "closest_preset_color_optimized": true,
+    "force_split_multi_texture": false,
+    "force_preview_multi_texture": false,
+    "force_draw_multi_textrue": false,
+    "downsample_if_needed": true,
     "tutorials": [
         {
             "title": "更多资讯",
