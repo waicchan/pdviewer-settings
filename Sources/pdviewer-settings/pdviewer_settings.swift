@@ -138,9 +138,17 @@ private class SettingsFetcher {
               if let oVersionStr = oJson["version"].string,
                  let oVersion = SettingsVersion(string: oVersionStr) {
                 log("SettingsFetcher", .info, message: "old settings version: \(oVersion)")
-                if oVersion >= version {
-                  completion(.failure(NSError(domain: "VersionCoverError", code: -7, userInfo: nil)))
-                  return
+                if SettingsInjection.instance.debug {
+                  // DEBUG环境下，settings文件的version弱检查，因为不可能频繁更新version字段
+                  if oVersion > version {
+                    completion(.failure(NSError(domain: "VersionCoverError", code: -7, userInfo: nil)))
+                    return
+                  }
+                } else {
+                  if oVersion >= version {
+                    completion(.failure(NSError(domain: "VersionCoverError", code: -8, userInfo: nil)))
+                    return
+                  }
                 }
               }
             } catch {
