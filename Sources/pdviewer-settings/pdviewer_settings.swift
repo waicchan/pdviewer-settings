@@ -55,7 +55,6 @@ private class SettingsFetcher {
          let presetVersionStr = json["version"].string, let presetVersion = SettingsVersion(string: presetVersionStr),
          presetVersionStr <= storedVersionStr {
         log("SettingsFetcher", .info, message: "stored settings pass version check, storedVersion: \(storedVersion), presetVersion: \(presetVersion)")
-        // 同settings版本也以拉取的为准
         return storedJson
       } else {
         return json
@@ -139,11 +138,18 @@ private class SettingsFetcher {
               if let oVersionStr = oJson["version"].string,
                  let oVersion = SettingsVersion(string: oVersionStr) {
                 log("SettingsFetcher", .info, message: "old settings version: \(oVersion)")
-                if oVersion > version {
-                  completion(.failure(NSError(domain: "VersionCoverError", code: -7, userInfo: nil)))
-                  return
+                if SettingsInjection.instance.debug {
+                  // DEBUG环境下，settings文件的version弱检查，因为不可能频繁更新version字段
+                  if oVersion > version {
+                    completion(.failure(NSError(domain: "VersionCoverError", code: -7, userInfo: nil)))
+                    return
+                  }
+                } else {
+                  if oVersion >= version {
+                    completion(.failure(NSError(domain: "VersionCoverError", code: -8, userInfo: nil)))
+                    return
+                  }
                 }
-                // 同settings版本也及时覆盖
               }
             } catch {
               log("SettingsFetcher", .warning, message: "handle stored json fail, error: \(error)")
