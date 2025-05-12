@@ -17,17 +17,17 @@ func log(_ tag: String, _ flag: DDLogFlag, message: String) {
     
     switch flag {
     case .debug:
-      DDLogDebug(message, tag: tag)
+      DDLogDebug("🐞 [\(tag)] \(message)", tag: tag)
     case .error:
-      DDLogError(message, tag: tag)
+      DDLogError("❌ [\(tag)] \(message)", tag: tag)
     case .info:
-      DDLogInfo(message, tag: tag)
+      DDLogInfo("📘 [\(tag)] \(message)", tag: tag)
     case .verbose:
-      DDLogVerbose(message, tag: tag)
+      DDLogVerbose("🔍 [\(tag)] \(message)", tag: tag)
     case .warning:
-      DDLogWarn(message, tag: tag)
+      DDLogWarn("⚠️ [\(tag)] \(message)", tag: tag)
     default:
-      DDLogInfo(message, tag: tag)
+      DDLogInfo("📘 [\(tag)] \(message)", tag: tag)
     }
   }
 }
