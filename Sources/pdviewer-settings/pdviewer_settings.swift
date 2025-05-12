@@ -196,19 +196,19 @@ public final class Settings: @unchecked Sendable {
   }()
   
   public private(set) lazy var forceSplitMultiTexture: Bool = {
-    json?["force_split_multi_texture"].bool ?? false
+    json?["force_split_multi_texture"].bool ?? true
   }()
   
   public private(set) lazy var forcePreviewMultiTexture: Bool = {
-    json?["force_preview_multi_texture"].bool ?? false
+    json?["force_preview_multi_texture"].bool ?? true
   }()
   
   public private(set) lazy var forceDrawMultiTexture: Bool = {
-    json?["force_draw_multi_textrue"].bool ?? false
+    json?["force_draw_multi_textrue"].bool ?? true
   }()
   
   public private(set) lazy var downSampleIfNeeded: Bool = {
-    json?["downsample_if_needed"].bool ?? true
+    json?["downsample_if_needed"].bool ?? false
   }()
   
   public private(set) lazy var contactDeveloperTutorial: Tutorial? = {

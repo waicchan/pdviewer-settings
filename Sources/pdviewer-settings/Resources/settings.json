@@ -1,10 +1,10 @@
 {
     "version": "1.0.0",
     "min_supported_app_version": "3.9.0",
-    "force_split_multi_texture": false,
-    "force_preview_multi_texture": false,
-    "force_draw_multi_textrue": false,
-    "downsample_if_needed": true,
+    "force_split_multi_texture": true,
+    "force_preview_multi_texture": true,
+    "force_draw_multi_textrue": true,
+    "downsample_if_needed": false,
     "tutorials": [
         {
             "title": "更多资讯",
