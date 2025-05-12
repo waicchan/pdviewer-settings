@@ -66,7 +66,7 @@ private class SettingsFetcher {
   }
   
   private static let remote =
-  SettingsInjection.instance.debug ? "https://gitee.com/waichen/pixelanim-settings/raw/develop/Sources/pixelanim-settings/Resources/settings.json" : "https://gitee.com/waichen/pixelanim-settings/raw/release/Sources/pixelanim-settings/Resources/settings.json"
+  SettingsInjection.instance.debug ? "https://gitee.com/waichen/pdviewer-settings/raw/develop/Sources/pdviewer-settings/Resources/settings.json" : "https://gitee.com/waichen/pdviewer-settings/raw/release/Sources/pdviewer-settings/Resources/settings.json"
   
   private static let remoteURL: URL? = URL(string: remote)
   
