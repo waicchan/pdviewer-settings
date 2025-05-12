@@ -187,6 +187,10 @@ public final class Settings: @unchecked Sendable {
   
   private let json: JSON?
   
+  public func setup() {
+    log("Settings", .info, message: "setup")
+  }
+  
   public private(set) lazy var tutorials: [Tutorial] = {
     json?["tutorials"].arrayValue.map({ Tutorial(json: $0) }) ?? []
   }()
