@@ -1,2 +1,221 @@
 // The Swift Programming Language
 // https://docs.swift.org/swift-book
+import SwiftyJSON
+import Foundation
+
+private class SettingsFetcher {
+  nonisolated(unsafe) static let instance = SettingsFetcher()
+  static func storeURL() -> URL? {
+    guard let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
+      return nil
+    }
+    let directory = documentsDirectory.appendingPathComponent("settings")
+    
+    do {
+      if !FileManager.default.fileExists(atPath: directory.path) {
+        try FileManager.default.createDirectory(atPath: directory.path, withIntermediateDirectories: true)
+      }
+    } catch {
+      print("Error encoding or writing JSON: \(error)")
+      return nil
+    }
+    
+    return directory.appendingPathComponent("settings.json")
+  }
+  
+  private static var bundle: Bundle {
+    return Bundle.module
+  }
+  
+  private var json: JSON? {
+    var storedJson: JSON?
+    if let stored = Self.storeURL(), FileManager.default.fileExists(atPath: stored.path) {
+      do {
+        let data = try Data(contentsOf: stored)
+        let json = try JSON(data: data)
+        log("SettingsFetcher", .info, message: "parse stored settings json success, json: \(json)")
+        storedJson = json
+      } catch {
+        log("SettingsFetcher", .error, message: "parse stored settings json fail, error: \(error)")
+      }
+    }
+    
+    guard let url = Self.bundle.url(forResource: "settings", withExtension: "json") else {
+      log("SettingsFetcher", .error, message: "get preset settings failed")
+      return storedJson
+    }
+    
+    do {
+      let data = try Data(contentsOf: url)
+      let json = try JSON(data: data)
+      log("SettingsFetcher", .info, message: "parse preset settings success, json: \(json)")
+      
+      if let storedJson,
+         let storedVersionStr = storedJson["version"].string, let storedVersion = SettingsVersion(string: storedVersionStr),
+         let presetVersionStr = json["version"].string, let presetVersion = SettingsVersion(string: presetVersionStr),
+         presetVersionStr <= storedVersionStr {
+        log("SettingsFetcher", .info, message: "stored settings pass version check, storedVersion: \(storedVersion), presetVersion: \(presetVersion)")
+        return storedJson
+      } else {
+        return json
+      }
+    } catch {
+      log("SettingsFetcher", .error, message: "parse preset settings fail, error: \(error)")
+      return nil
+    }
+  }
+  
+  private static let remote =
+  SettingsInjection.instance.debug ? "https://gitee.com/waichen/pixelanim-settings/raw/develop/Sources/pixelanim-settings/Resources/settings.json" : "https://gitee.com/waichen/pixelanim-settings/raw/release/Sources/pixelanim-settings/Resources/settings.json"
+  
+  private static let remoteURL: URL? = URL(string: remote)
+  
+  func async() -> JSON? {
+    defer {
+      log("SettingsFetcher", .info, message: "will download file from: \(Self.remoteURL) to: \(Self.storeURL())")
+      
+      if let remoteURL = Self.remoteURL, let url = Self.storeURL() {
+        log("SettingsFetcher", .info, message: "begin download file from: \(remoteURL) to: \(url)")
+        
+        downloadFile(from: remoteURL, to: url) { result in
+          log("SettingsFetcher", .info, message: "download result: \(result)")
+        }
+      }
+    }
+    
+    return json
+  }
+  
+  private func downloadFile(from url: URL, to destinationURL: URL, completion: @escaping (Result<URL, Error>) -> Void) {
+    let task = URLSession.shared.downloadTask(with: url) { tempURL, response, error in
+      DispatchQueue.main.async {
+        do {
+          if let error = error {
+            completion(.failure(error))
+            return
+          }
+          
+          guard let tempURL = tempURL else {
+            completion(.failure(NSError(domain: "DownloadError", code: -1, userInfo: nil)))
+            return
+          }
+          
+          let data = try Data(contentsOf: tempURL)
+          let json = try JSON(data: data)
+          log("SettingsFetcher", .info, message: "Parse Json Successfully: \(json)")
+          
+          guard let versionStr = json["version"].string, let version = SettingsVersion(string: versionStr) else {
+            completion(.failure(NSError(domain: "ParseJsonError", code: -3, userInfo: nil)))
+            return
+          }
+          
+          log("SettingsFetcher", .info, message: "new settings version: \(version)")
+          
+          guard let minAppVersionStr = json["min_supported_app_version"].string, let minAppVersion = SettingsVersion(string: minAppVersionStr) else {
+            completion(.failure(NSError(domain: "ParseJsonError", code: -4, userInfo: nil)))
+            return
+          }
+          
+          log("SettingsFetcher", .info, message: "Min App Version Required: \(minAppVersion)")
+          
+          guard let appVersionStr = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String, let appVersion = SettingsVersion(string: appVersionStr) else {
+            completion(.failure(NSError(domain: "ParseAppVersionError", code: -5, userInfo: nil)))
+            return
+          }
+          
+          log("SettingsFetcher", .info, message: "App Version: \(appVersion)")
+          
+          guard appVersion >= minAppVersion else {
+            completion(.failure(NSError(domain: "MinAppVersionCheckError", code: -6, userInfo: nil)))
+            return
+          }
+          
+          // 删除已有文件（如果存在）
+          if FileManager.default.fileExists(atPath: destinationURL.path) {
+            do {
+              let oData = try Data(contentsOf: destinationURL)
+              let oJson = try JSON(data: oData)
+              if let oVersionStr = oJson["version"].string,
+                 let oVersion = SettingsVersion(string: oVersionStr) {
+                log("SettingsFetcher", .info, message: "old settings version: \(oVersion)")
+                if oVersion >= version {
+                  completion(.failure(NSError(domain: "VersionCoverError", code: -7, userInfo: nil)))
+                  return
+                }
+              }
+            } catch {
+              log("SettingsFetcher", .warning, message: "handle stored json fail, error: \(error)")
+            }
+            
+            try? FileManager.default.removeItem(at: destinationURL)
+          }
+          // 移动下载的文件到目标位置
+          try FileManager.default.moveItem(at: tempURL, to: destinationURL)
+          completion(.success(destinationURL))
+        } catch {
+          completion(.failure(error))
+        }
+      }
+    }
+    
+    task.resume()
+  }
+}
+
+@available(iOS 13.0, macOS 10.15, *)
+public final class Settings: @unchecked Sendable {
+  // 使用静态常量实现线程安全的单例
+  public static let instance: Settings = {
+    let instance = Settings()
+    log("Settings", .info, message: "init with new instance: \(instance)")
+    return instance
+  }()
+  
+  private init() {
+    self.json = SettingsFetcher.instance.async()
+    
+    log("Settings", .info, message: "did init, json: \(json)")
+  }
+  
+  private let json: JSON?
+  
+  public private(set) lazy var tutorials: [Tutorial] = {
+    json?["tutorials"].arrayValue.map({ Tutorial(json: $0) }) ?? []
+  }()
+  
+  public private(set) lazy var maxHistoryRecords: Int = {
+    json?["max_history_records"].int ?? 64
+  }()
+  
+  public private(set) lazy var maxDrawingArea: Float = {
+    json?["max_drawing_area"].float ?? 4665600
+  }()
+  
+  public private(set) lazy var maxDrawingHeight: Float = {
+    json?["max_drawing_height"].float ?? 4665600
+  }()
+  
+  public private(set) lazy var pdviewerMaxDrawingArea: Float = {
+    json?["max_drawing_area_pdviewer"].float ?? 3841600
+  }()
+  
+  public private(set) lazy var pdviewerMaxDrawingHeight: Float = {
+    json?["max_drawing_height_pdviewer"].float ?? 1960
+  }()
+  
+  public private(set) lazy var closestPresetColorOptimized: Bool = {
+    json?["closest_preset_color_optimized"].boolValue ?? true
+  }()
+  
+  public private(set) lazy var pixelAlign4Tutorial: Tutorial? = {
+    tutorials.first(where: { $0.identifier == "pixel_align_4" })
+  }()
+  
+  public private(set) lazy var rowsColumesAlignTutorial: Tutorial? = {
+    tutorials.first(where: { $0.identifier == "rows_columes_align" })
+  }()
+  
+  public private(set) lazy var contactDeveloperTutorial: Tutorial? = {
+    tutorials.first(where: { $0.identifier == "contact_developer" })
+  }()
+}

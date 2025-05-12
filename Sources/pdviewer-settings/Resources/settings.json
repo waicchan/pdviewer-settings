@@ -1,0 +1,19 @@
+{
+    "version": "1.0.0",
+    "min_supported_app_version": "3.9.0",
+    "max_history_records": 64,
+    "max_drawing_area": 4665600,
+    "max_drawing_height": 2250,
+    "max_drawing_area_pdviewer": 3841600,
+    "max_drawing_height_pdviewer": 1960,
+    "closest_preset_color_optimized": true,
+    "tutorials": [
+        {
+            "title": "更多资讯",
+            "description": "欢迎关注～查看更多最新教程，及时了解最新功能特性，也欢迎反馈与建议！",
+            "base_url": "https://www.xiaohongshu.com/user/profile/658028a5000000001902d06d?xsec_token=YBvUdK9C0EhSMJCXlIdVuxwW3J4sh0nMfBPfbb4MJu9sY=&xsec_source=app_share&xhsshare=CopyLink&appuid=658028a5000000001902d06d&apptime=1739335229&share_id=759eece636194e1ca28c32ae2f4a026e",
+            "type": 2,
+            "identifier": "contact_developer"
+        }
+    ]
+}
