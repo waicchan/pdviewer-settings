@@ -2,6 +2,7 @@
 // https://docs.swift.org/swift-book
 import SwiftyJSON
 import Foundation
+import PDLogger
 
 private class SettingsFetcher {
   nonisolated(unsafe) static let instance = SettingsFetcher()
@@ -33,52 +34,52 @@ private class SettingsFetcher {
       do {
         let data = try Data(contentsOf: stored)
         let json = try JSON(data: data)
-        log("SettingsFetcher", .info, message: "parse stored settings json success, json: \(json)")
+        logger.log("SettingsFetcher", .info, message: "parse stored settings json success, json: \(json)")
         storedJson = json
       } catch {
-        log("SettingsFetcher", .error, message: "parse stored settings json fail, error: \(error)")
+        logger.log("SettingsFetcher", .error, message: "parse stored settings json fail, error: \(error)")
       }
     }
     
     guard let url = Self.bundle.url(forResource: "settings", withExtension: "json") else {
-      log("SettingsFetcher", .error, message: "get preset settings failed")
+      logger.log("SettingsFetcher", .error, message: "get preset settings failed")
       return storedJson
     }
     
     do {
       let data = try Data(contentsOf: url)
       let json = try JSON(data: data)
-      log("SettingsFetcher", .info, message: "parse preset settings success, json: \(json)")
+      logger.log("SettingsFetcher", .info, message: "parse preset settings success, json: \(json)")
       
       if let storedJson,
          let storedVersionStr = storedJson["version"].string, let storedVersion = SettingsVersion(string: storedVersionStr),
          let presetVersionStr = json["version"].string, let presetVersion = SettingsVersion(string: presetVersionStr),
          presetVersionStr <= storedVersionStr {
-        log("SettingsFetcher", .info, message: "stored settings pass version check, storedVersion: \(storedVersion), presetVersion: \(presetVersion)")
+        logger.log("SettingsFetcher", .info, message: "stored settings pass version check, storedVersion: \(storedVersion), presetVersion: \(presetVersion)")
         return storedJson
       } else {
         return json
       }
     } catch {
-      log("SettingsFetcher", .error, message: "parse preset settings fail, error: \(error)")
+      logger.log("SettingsFetcher", .error, message: "parse preset settings fail, error: \(error)")
       return nil
     }
   }
   
   private static let remote =
-  SettingsInjection.instance.debug ? "https://gitee.com/waichen/pdviewer-settings/raw/develop/Sources/pdviewer-settings/Resources/settings.json" : "https://gitee.com/waichen/pdviewer-settings/raw/release/Sources/pdviewer-settings/Resources/settings.json"
+  logger.DEBUG ? "https://gitee.com/waichen/pdviewer-settings/raw/develop/Sources/pdviewer-settings/Resources/settings.json" : "https://gitee.com/waichen/pdviewer-settings/raw/release/Sources/pdviewer-settings/Resources/settings.json"
   
   private static let remoteURL: URL? = URL(string: remote)
   
   func async() -> JSON? {
     defer {
-      log("SettingsFetcher", .info, message: "will download file from: \(Self.remoteURL) to: \(Self.storeURL())")
+      logger.log("SettingsFetcher", .info, message: "will download file from: \(Self.remoteURL) to: \(Self.storeURL())")
       
       if let remoteURL = Self.remoteURL, let url = Self.storeURL() {
-        log("SettingsFetcher", .info, message: "begin download file from: \(remoteURL) to: \(url)")
+        logger.log("SettingsFetcher", .info, message: "begin download file from: \(remoteURL) to: \(url)")
         
         downloadFile(from: remoteURL, to: url) { result in
-          log("SettingsFetcher", .info, message: "download result: \(result)")
+          logger.log("SettingsFetcher", .info, message: "download result: \(result)")
         }
       }
     }
@@ -102,28 +103,28 @@ private class SettingsFetcher {
           
           let data = try Data(contentsOf: tempURL)
           let json = try JSON(data: data)
-          log("SettingsFetcher", .info, message: "Parse Json Successfully: \(json)")
+          logger.log("SettingsFetcher", .info, message: "Parse Json Successfully: \(json)")
           
           guard let versionStr = json["version"].string, let version = SettingsVersion(string: versionStr) else {
             completion(.failure(NSError(domain: "ParseJsonError", code: -3, userInfo: nil)))
             return
           }
           
-          log("SettingsFetcher", .info, message: "new settings version: \(version)")
+          logger.log("SettingsFetcher", .info, message: "new settings version: \(version)")
           
           guard let minAppVersionStr = json["min_supported_app_version"].string, let minAppVersion = SettingsVersion(string: minAppVersionStr) else {
             completion(.failure(NSError(domain: "ParseJsonError", code: -4, userInfo: nil)))
             return
           }
           
-          log("SettingsFetcher", .info, message: "Min App Version Required: \(minAppVersion)")
+          logger.log("SettingsFetcher", .info, message: "Min App Version Required: \(minAppVersion)")
           
           guard let appVersionStr = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String, let appVersion = SettingsVersion(string: appVersionStr) else {
             completion(.failure(NSError(domain: "ParseAppVersionError", code: -5, userInfo: nil)))
             return
           }
           
-          log("SettingsFetcher", .info, message: "App Version: \(appVersion)")
+          logger.log("SettingsFetcher", .info, message: "App Version: \(appVersion)")
           
           guard appVersion >= minAppVersion else {
             completion(.failure(NSError(domain: "MinAppVersionCheckError", code: -6, userInfo: nil)))
@@ -137,8 +138,8 @@ private class SettingsFetcher {
               let oJson = try JSON(data: oData)
               if let oVersionStr = oJson["version"].string,
                  let oVersion = SettingsVersion(string: oVersionStr) {
-                log("SettingsFetcher", .info, message: "old settings version: \(oVersion)")
-                if SettingsInjection.instance.debug {
+                logger.log("SettingsFetcher", .info, message: "old settings version: \(oVersion)")
+                if logger.DEBUG {
                   // DEBUG环境下，settings文件的version弱检查，因为不可能频繁更新version字段
                   if oVersion > version {
                     completion(.failure(NSError(domain: "VersionCoverError", code: -7, userInfo: nil)))
@@ -152,7 +153,7 @@ private class SettingsFetcher {
                 }
               }
             } catch {
-              log("SettingsFetcher", .warning, message: "handle stored json fail, error: \(error)")
+              logger.log("SettingsFetcher", .warning, message: "handle stored json fail, error: \(error)")
             }
             
             try? FileManager.default.removeItem(at: destinationURL)
@@ -175,20 +176,20 @@ public final class Settings: @unchecked Sendable {
   // 使用静态常量实现线程安全的单例
   public static let instance: Settings = {
     let instance = Settings()
-    log("Settings", .info, message: "init with new instance: \(instance)")
+    logger.log("Settings", .info, message: "init with new instance: \(instance)")
     return instance
   }()
   
   private init() {
     self.json = SettingsFetcher.instance.async()
     
-    log("Settings", .info, message: "did init, json: \(json)")
+    logger.log("Settings", .info, message: "did init, json: \(json)")
   }
   
   private let json: JSON?
   
   public func setup() {
-    log("Settings", .info, message: "setup")
+    logger.log("Settings", .info, message: "setup")
   }
   
   public private(set) lazy var tutorials: [Tutorial] = {

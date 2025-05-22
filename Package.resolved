@@ -1,5 +1,5 @@
 {
-  "originHash" : "7a707532f1e6d944cedc90f109f3820e9e08e7f4c28617def010563d284187f3",
+  "originHash" : "1f69358127a56a96212cbdd81a749cdfcdad6aad7cdc4099342f04bff8d1d68a",
   "pins" : [
     {
       "identity" : "cocoalumberjack",
@@ -20,6 +20,15 @@
       }
     },
     {
+      "identity" : "pdlogger",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/waicchan/PDLogger.git",
+      "state" : {
+        "branch" : "develop",
+        "revision" : "902f17da0f02baf30090c8095923bbd69093c0df"
+      }
+    },
+    {
       "identity" : "swift-log",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-log",
@@ -35,6 +44,15 @@
       "state" : {
         "revision" : "af76cf3ef710b6ca5f8c05f3a31307d44a3c5828",
         "version" : "5.0.2"
+      }
+    },
+    {
+      "identity" : "ziparchive",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/ZipArchive/ZipArchive.git",
+      "state" : {
+        "revision" : "df35718ea19a94e015b91dc4881dee028ce4cdba",
+        "version" : "2.6.0"
       }
     }
   ],
