@@ -22,7 +22,6 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/SwiftyJSON/SwiftyJSON.git", .upToNextMajor(from: "5.0.2")),
         .package(url: "https://github.com/devicekit/DeviceKit.git", .upToNextMajor(from: "5.6.0")),
-        .package(url: "https://github.com/CocoaLumberjack/CocoaLumberjack.git", .upToNextMajor(from: "3.8.5")),
         .package(url: "https://github.com/waicchan/PDLogger.git", branch: "develop"),
     ],
     targets: [
@@ -34,8 +33,6 @@ let package = Package(
               "SwiftyJSON",
               "DeviceKit",
               "PDLogger",
-              .product(name: "CocoaLumberjack", package: "CocoaLumberjack"),
-              .product(name: "CocoaLumberjackSwift", package: "CocoaLumberjack")
           ],
             resources: [
                 .process("Resources")  // 或 .copy("Resources")
