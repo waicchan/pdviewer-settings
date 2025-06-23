@@ -215,4 +215,8 @@ public final class Settings: @unchecked Sendable {
   public private(set) lazy var contactDeveloperTutorial: Tutorial? = {
     tutorials.first(where: { $0.identifier == "contact_developer" })
   }()
+  
+  public private(set) lazy var imageLimitedSize: Float = {
+    json?["image_limited_size"].float ?? 4200
+  }()
 }
